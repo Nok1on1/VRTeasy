@@ -1,0 +1,6 @@
+API_URL=http://localhost:4200
+API_KEY=YOUR_VRT_API_KEY
+PROJECT_NAME=Default project
+BRANCH_NAME=master
+
+
