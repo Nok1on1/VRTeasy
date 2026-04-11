@@ -6,8 +6,8 @@
 
   <parent>
     <groupId>ge.tbc.testautomation</groupId>
-    <artifactId>vrteasy-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>vrteasy</artifactId>
+    <version>0.1</version>
   </parent>
 
   <artifactId>vrteasy-selenium</artifactId>
@@ -23,6 +23,7 @@
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

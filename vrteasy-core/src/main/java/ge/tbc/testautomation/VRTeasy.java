@@ -12,6 +12,8 @@ import org.testng.asserts.SoftAssert;
 
 public class VRTeasy {
 
+  private static final String NL = System.lineSeparator();
+
   private final VisualRegressionTracker vrt;
   private final Assertion assertion;
   private final VRTClient vrtClient;
@@ -30,8 +32,13 @@ public class VRTeasy {
 
     try {
       vrt.start();
+    } catch (NoSuchMethodError e) {
+      throw createSdkMismatchException("start", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(formatInterruptedMessage("start"), e);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(formatIoFailureMessage("start"), e);
     }
   }
 
@@ -52,21 +59,58 @@ public class VRTeasy {
       }
 
       return response;
+    } catch (NoSuchMethodError e) {
+      throw createSdkMismatchException("track", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(formatInterruptedMessage("track"), e);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(formatIoFailureMessage("track"), e);
     }
   }
 
   public void stopVRT() {
     try {
       vrt.stop();
+    } catch (NoSuchMethodError e) {
+      throw createSdkMismatchException("stop", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(formatInterruptedMessage("stop"), e);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(formatIoFailureMessage("stop"), e);
     }
 
     if (assertion instanceof SoftAssert softAssert) {
       softAssert.assertAll();
     }
+  }
+
+  private static IllegalStateException createSdkMismatchException(String action, NoSuchMethodError error) {
+    return new IllegalStateException("[VRTeasy runtime compatibility error]" + NL
+        + "Problem: incompatible Visual Regression Tracker SDK detected while trying to '" + action + "'." + NL
+        + "What to do:" + NL
+        + "  1) Use the same sdk-java version that VRTeasy was built with." + NL
+        + "  2) Remove duplicate/older sdk-java versions from your dependency tree." + NL
+        + "  3) Run 'mvn dependency:tree -Dincludes=com.github.Visual-Regression-Tracker:sdk-java'" + NL
+        + "     and keep only one version.", error);
+  }
+
+  private static String formatInterruptedMessage(String action) {
+    return "[VRTeasy runtime error]" + NL
+        + "Problem: thread was interrupted during VRT '" + action + "' call." + NL
+        + "What to do:" + NL
+        + "  1) Treat this test as aborted." + NL
+        + "  2) Check timeout/cancellation logic in your test framework.";
+  }
+
+  private static String formatIoFailureMessage(String action) {
+    return "[VRTeasy runtime error]" + NL
+        + "Problem: I/O failure while calling VRT '" + action + "'." + NL
+        + "What to do:" + NL
+        + "  1) Verify API_URL/API_KEY in vrteasy.properties." + NL
+        + "  2) Ensure VRT server is running and reachable." + NL
+        + "  3) Retry once and inspect nested cause for HTTP details.";
   }
 }
 
