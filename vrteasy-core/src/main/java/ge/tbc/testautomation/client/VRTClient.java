@@ -1,6 +1,14 @@
 package ge.tbc.testautomation.client;
 
-public interface VRTClient {
-  byte[] screenshot();
+import ge.tbc.testautomation.utils.VRTLogger;
+import java.nio.file.Path;
+
+public abstract class VRTClient {
+
+  protected final VRTLogger logger = new VRTLogger();
+
+  public abstract byte[] screenshot();
+
+  public abstract Path downloadPDF(String xpath);
 }
 

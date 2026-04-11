@@ -1,10 +1,10 @@
 # VRTeasy
 
-VRTeasy is a thin Java wrapper around [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) for UI visual checks.
+VRTeasy is a lightweight Java wrapper around [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) for visual checks in UI tests.
 
 ## Modules
 
-- `ge.tbc.testautomation:vrteasy-core` - `VRTeasy`, `VRTeasyConfigProvider`, and `VRTClient`
+- `ge.tbc.testautomation:vrteasy-core` - `VRTeasy`, config loading, and base `VRTClient`
 - `ge.tbc.testautomation:vrteasy-playwright` - Playwright adapter (`PlaywrightVRTClient`)
 - `ge.tbc.testautomation:vrteasy-selenium` - Selenium adapter (`SeleniumVRTClient`)
 
@@ -14,24 +14,24 @@ VRTeasy is a thin Java wrapper around [Visual Regression Tracker](https://github
 - Maven 3.8+
 - A running Visual Regression Tracker server
 
-## Installation
+## Build from source
 
 ```bash
 mvn clean install
 ```
 
-## Configuration
+## Quick start
 
-`VRTeasy` has two constructors:
+`VRTeasy` supports two startup styles:
 
 ```java
-new VRTeasy(VRTClient client)
-new VRTeasy(VRTClient client, VisualRegressionTrackerConfig vrtConfig)
+new VRTeasy(vrtClient);
+new VRTeasy(vrtClient, visualRegressionTrackerConfig);
 ```
 
-- Use the second constructor when you want to supply a fully configured `VisualRegressionTrackerConfig`.
-- Use the first constructor when you want VRTeasy to read `vrt.json` from the current working directory.
-- If `enableSoftAssert` is `true`, assertion failures are collected and thrown at `stopVRT()`; otherwise they fail immediately.
+- Use `new VRTeasy(vrtClient)` to load configuration from `vrt.json` in the current working directory.
+- Use `new VRTeasy(vrtClient, visualRegressionTrackerConfig)` when you want full runtime control from code.
+- If `enableSoftAssert` is `true`, assertion failures are aggregated and thrown on `stopVRT()`.
 
 Example `vrt.json`:
 
@@ -45,19 +45,27 @@ Example `vrt.json`:
 
 Main class: `vrteasy-core/src/main/java/ge/tbc/testautomation/VRTeasy.java`
 
-Interface: `vrteasy-core/src/main/java/ge/tbc/testautomation/client/VRTClient.java`
-
-`VRTClient` only needs to provide screenshot bytes:
+Base client class: `vrteasy-core/src/main/java/ge/tbc/testautomation/client/VRTClient.java`
 
 ```java
-public interface VRTClient {
-  byte[] screenshot();
+public abstract class VRTClient {
+  public abstract byte[] screenshot();
+  public abstract Path downloadPDF(String xpath);
 }
 ```
 
-### Playwright adapter
+Common `VRTeasy` operations:
 
-`vrteasy-playwright/src/main/java/ge/tbc/testautomation/client/PlaywrightVRTClient.java`
+- `takeScreenshotAndTrack(String screenshotIdentifier, TestRunStatus expectedStatus)`
+- `downloadAndTrackPDF(String xpath, TestRunStatus expectedStatus)`
+- `trackPDF(Path filePath, TestRunStatus expectedStatus)`
+- `stopVRT()`
+
+## Adapter examples
+
+### Playwright
+
+Implementation: `vrteasy-playwright/src/main/java/ge/tbc/testautomation/client/PlaywrightVRTClient.java`
 
 ```java
 Playwright playwright = Playwright.create();
@@ -67,7 +75,7 @@ Page page = browser.newPage();
 VRTeasy vrt = new VRTeasy(new PlaywrightVRTClient(page));
 
 page.navigate("https://example.com");
-vrt.takeScreenshot("example-homepage", TestRunStatus.OK);
+vrt.takeScreenshotAndTrack("example-homepage", TestRunStatus.OK);
 vrt.stopVRT();
 
 page.close();
@@ -75,32 +83,32 @@ browser.close();
 playwright.close();
 ```
 
-### Selenium adapter
+### Selenium
 
-`vrteasy-selenium/src/main/java/ge/tbc/testautomation/client/SeleniumVRTClient.java`
+Implementation: `vrteasy-selenium/src/main/java/ge/tbc/testautomation/client/SeleniumVRTClient.java`
 
 ```java
 WebDriver driver = new ChromeDriver();
 VRTeasy vrt = new VRTeasy(new SeleniumVRTClient(driver));
 
 driver.get("https://example.com");
-vrt.takeScreenshot("example-homepage", TestRunStatus.OK);
+vrt.takeScreenshotAndTrack("example-homepage", TestRunStatus.OK);
 vrt.stopVRT();
 driver.quit();
 ```
 
-## Consumer dependency examples
+## Maven dependency examples
 
-VRTeasy keeps the major integrations on `provided` scope:
+Project release version: `0.3.1`
 
-- Visual Regression Tracker SDK
-- TestNG
-- Playwright
-- Selenium
+VRTeasy modules declare key integrations as `provided`:
 
-That means your project must provide compatible runtime/compile-time dependencies.
+- `com.github.Visual-Regression-Tracker:sdk-java` (`5.3.3`)
+- `org.testng:testng` (`7.12.0`)
+- `com.microsoft.playwright:playwright` (`1.58.0`)
+- `org.seleniumhq.selenium:selenium-java` (`4.41.0`)
 
-Current artifact versions are based on the parent release `0.2`.
+Your project should include the dependencies it needs at compile/runtime.
 
 ### Core only
 
@@ -108,7 +116,7 @@ Current artifact versions are based on the parent release `0.2`.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-core</artifactId>
-  <version>0.2</version>
+  <version>0.3.1</version>
 </dependency>
 
 <dependency>
@@ -124,13 +132,13 @@ Current artifact versions are based on the parent release `0.2`.
 </dependency>
 ```
 
-### Core + Playwright adapter
+### Playwright adapter
 
 ```xml
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-playwright</artifactId>
-  <version>0.2</version>
+  <version>0.3.1</version>
 </dependency>
 
 <dependency>
@@ -152,13 +160,13 @@ Current artifact versions are based on the parent release `0.2`.
 </dependency>
 ```
 
-### Core + Selenium adapter
+### Selenium adapter
 
 ```xml
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-selenium</artifactId>
-  <version>0.2</version>
+  <version>0.3.1</version>
 </dependency>
 
 <dependency>

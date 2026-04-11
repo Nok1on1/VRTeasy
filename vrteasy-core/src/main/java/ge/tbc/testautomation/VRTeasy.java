@@ -1,12 +1,14 @@
 package ge.tbc.testautomation;
 
 import static ge.tbc.testautomation.VRTeasyConfigProvider.readConfigFromJsonFile;
-import static ge.tbc.testautomation.data.messages.createSdkMismatchException;
-import static ge.tbc.testautomation.data.messages.formatInterruptedMessage;
-import static ge.tbc.testautomation.data.messages.formatIoFailureMessage;
+import static ge.tbc.testautomation.data.Messages.createSdkMismatchException;
+import static ge.tbc.testautomation.data.Messages.formatInterruptedMessage;
+import static ge.tbc.testautomation.data.Messages.formatIoFailureMessage;
 import static ge.tbc.testautomation.utils.ColorFormatter.statusColorized;
 
 import ge.tbc.testautomation.client.VRTClient;
+import ge.tbc.testautomation.data.Properties;
+import ge.tbc.testautomation.utils.FileHandler;
 import ge.tbc.testautomation.utils.VRTLogger;
 import io.visual_regression_tracker.sdk_java.TestRunStatus;
 import io.visual_regression_tracker.sdk_java.VisualRegressionTracker;
@@ -14,8 +16,10 @@ import io.visual_regression_tracker.sdk_java.VisualRegressionTrackerConfig;
 import io.visual_regression_tracker.sdk_java.response.TestRunResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Base64;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.asserts.Assertion;
 import org.testng.asserts.SoftAssert;
 
@@ -24,8 +28,9 @@ public class VRTeasy {
   private final VisualRegressionTracker vrt;
   private final Assertion assertion;
   private final VRTClient vrtClient;
+  private Properties properties = new Properties();
 
-  private final VRTLogger logger = new VRTLogger();
+  protected final VRTLogger logger = new VRTLogger();
 
   public VRTeasy(VRTClient vrtClient, VisualRegressionTrackerConfig vrtConfig) {
     this.vrtClient = vrtClient;
@@ -76,32 +81,55 @@ public class VRTeasy {
     return vrt;
   }
 
-  public TestRunResponse takeScreenshot(String screenshotIdentifier, TestRunStatus testRunStatus) {
+  public TestRunResponse takeScreenshotAndTrack(String screenshotIdentifier,
+      TestRunStatus testRunStatus) {
     byte[] screenshot = vrtClient.screenshot();
 
     try {
       String base64Screenshot = Base64.getEncoder().encodeToString(screenshot);
-      TestRunResponse response = vrt.track(screenshotIdentifier, base64Screenshot)
-          .getTestRunResponse();
 
-      if (testRunStatus != null) {
-        assertion.assertEquals(response.getStatus(), testRunStatus,
-            "VRT test run status mismatch for screenshot: " + screenshotIdentifier);
-      }
-
-      logger.getLogger().info(
-          "screenshot: " + screenshotIdentifier + " returned status: " + statusColorized(
-              response.getStatus()));
-
-      return response;
+      return trackImage(screenshotIdentifier, base64Screenshot, testRunStatus);
     } catch (NoSuchMethodError e) {
       throw createSdkMismatchException("track", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException(formatInterruptedMessage("track"), e);
-    } catch (IOException e) {
-      throw new IllegalStateException(formatIoFailureMessage("track"), e);
     }
+  }
+
+  public List<TestRunResponse> downloadAndTrackPDF(String xpath, TestRunStatus testRunStatus) {
+    Path filePath = vrtClient.downloadPDF(xpath);
+    return trackPDF(filePath, testRunStatus);
+  }
+
+  public List<TestRunResponse> trackPDF(Path filePath, TestRunStatus testRunStatus) {
+    AtomicInteger pageNum = new AtomicInteger(1);
+
+    return FileHandler.streamPDFPagesAsImages(filePath)
+        .map(pageImage -> {
+          int index = pageNum.getAndIncrement();
+          var imageIdentifier = filePath.getFileName().toString() + "_page_" + index;
+          String base64Image = Base64.getEncoder().encodeToString(pageImage);
+
+          return trackImage(imageIdentifier, base64Image, testRunStatus);
+        })
+        .toList();
+  }
+
+  protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
+      TestRunStatus testRunStatus) {
+    TestRunResponse response;
+    try {
+      response = vrt.track(imageIdentifier, base64Image).getTestRunResponse();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+
+    if (testRunStatus != null) {
+      assertion.assertEquals(response.getStatus(), testRunStatus,
+          "VRT test run status mismatch for Image: " + imageIdentifier);
+    }
+
+    logger.getLogger().info(
+        "image: " + imageIdentifier + " returned status: " + statusColorized(response.getStatus()));
+    return response;
   }
 
   public void stopVRT() {
@@ -121,4 +149,3 @@ public class VRTeasy {
     }
   }
 }
-

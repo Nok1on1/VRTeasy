@@ -1,8 +1,6 @@
 package ge.tbc.testautomation.data;
 
-import static ge.tbc.testautomation.data.constants.*;
-
-public class messages {
+public class Messages {
 
   private static final String NL = System.lineSeparator();
 
@@ -32,5 +30,18 @@ public class messages {
         + "  1) Verify apiUrl/apiKey in vrt.json (if using one)" + NL
         + "  2) Ensure VRT server is running and reachable." + NL
         + "  3) Retry once and inspect nested cause for HTTP details.";
+  }
+
+  public static String formatNotFoundMessage() {
+    return "";
+  }
+
+  public static String formatUnreadableMessage() {
+
+    return "";
+  }
+
+  public static String formatMissingPropertyMessage(String key) {
+   return "";
   }
 }
