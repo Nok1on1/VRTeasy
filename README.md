@@ -22,44 +22,49 @@ mvn clean install
 
 ## Configuration
 
-Use the example file from the core module and create your local config:
+`VRTeasy` has two constructors:
 
-```bash
-cp vrteasy-core/src/main/resources/vrteasy.properties.example vrteasy-core/src/main/resources/vrteasy.properties
+```java
+new VRTeasy(VRTClient client)
+new VRTeasy(VRTClient client, VisualRegressionTrackerConfig vrtConfig)
 ```
 
-Then edit `vrteasy-core/src/main/resources/vrteasy.properties`:
+- Use the second constructor when you want to supply a fully configured `VisualRegressionTrackerConfig`.
+- Use the first constructor when you want VRTeasy to read `vrt.json` from the current working directory.
+- If `enableSoftAssert` is `true`, assertion failures are collected and thrown at `stopVRT()`; otherwise they fail immediately.
 
-```properties
-API_URL=http://localhost:4200
-API_KEY=YOUR_VRT_API_KEY
-PROJECT_NAME=Default project
-BRANCH_NAME=master
+Example `vrt.json`:
+
+```json
+{
+  "enableSoftAssert": true
+}
 ```
-
-`VRTeasy` loads these keys through `VRTeasyConfigProvider` at startup.
 
 ## Core API
 
 Main class: `vrteasy-core/src/main/java/ge/tbc/testautomation/VRTeasy.java`
 
-Constructor:
+Interface: `vrteasy-core/src/main/java/ge/tbc/testautomation/client/VRTClient.java`
+
+`VRTClient` only needs to provide screenshot bytes:
 
 ```java
-new VRTeasy(VRTClient client, Boolean softAssert)
+public interface VRTClient {
+  byte[] screenshot();
+}
 ```
 
-- `client`: testing Framework (`PlaywrightVRTClient` or `SeleniumVRTClient`)
-- `softAssert`: `true` collects assertion failures and throws at `stopVRT()`; `false` fails immediately
+### Playwright adapter
 
-## Usage Example (Playwright)
+`vrteasy-playwright/src/main/java/ge/tbc/testautomation/client/PlaywrightVRTClient.java`
 
 ```java
 Playwright playwright = Playwright.create();
 Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
 Page page = browser.newPage();
 
-VRTeasy vrt = new VRTeasy(new PlaywrightVRTClient(page), false);
+VRTeasy vrt = new VRTeasy(new PlaywrightVRTClient(page));
 
 page.navigate("https://example.com");
 vrt.takeScreenshot("example-homepage", TestRunStatus.OK);
@@ -70,11 +75,13 @@ browser.close();
 playwright.close();
 ```
 
-## Usage Example (Selenium)
+### Selenium adapter
+
+`vrteasy-selenium/src/main/java/ge/tbc/testautomation/client/SeleniumVRTClient.java`
 
 ```java
 WebDriver driver = new ChromeDriver();
-VRTeasy vrt = new VRTeasy(new SeleniumVRTClient(driver), false);
+VRTeasy vrt = new VRTeasy(new SeleniumVRTClient(driver));
 
 driver.get("https://example.com");
 vrt.takeScreenshot("example-homepage", TestRunStatus.OK);
@@ -82,21 +89,26 @@ vrt.stopVRT();
 driver.quit();
 ```
 
-## Consumer Dependency Examples
+## Consumer dependency examples
 
-Note on dependency scopes:
-- VRTeasy modules declare major integrations (Visual-Regression-Tracker, Playwright, Selenium, TestNG) as `provided`.
-- This keeps VRTeasy artifacts lightweight.
-- Your project must provide compatible versions of the libraries you use at compile/runtime.
-- If multiple or incompatible versions are present, runtime issues like `NoSuchMethodError` may occur.
+VRTeasy keeps the major integrations on `provided` scope:
 
-Core only:
+- Visual Regression Tracker SDK
+- TestNG
+- Playwright
+- Selenium
+
+That means your project must provide compatible runtime/compile-time dependencies.
+
+Current artifact versions are based on the parent release `0.2`.
+
+### Core only
 
 ```xml
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-core</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 
 <dependency>
@@ -112,13 +124,13 @@ Core only:
 </dependency>
 ```
 
-Core + Playwright adapter:
+### Core + Playwright adapter
 
 ```xml
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-playwright</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 
 <dependency>
@@ -134,19 +146,19 @@ Core + Playwright adapter:
 </dependency>
 
 <dependency>
-<groupId>org.testng</groupId>
-<artifactId>testng</artifactId>
-<version>7.12.0</version>
+  <groupId>org.testng</groupId>
+  <artifactId>testng</artifactId>
+  <version>7.12.0</version>
 </dependency>
 ```
 
-Core + Selenium adapter:
+### Core + Selenium adapter
 
 ```xml
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-selenium</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 
 <dependency>
@@ -162,9 +174,9 @@ Core + Selenium adapter:
 </dependency>
 
 <dependency>
-<groupId>org.testng</groupId>
-<artifactId>testng</artifactId>
-<version>7.12.0</version>
+  <groupId>org.testng</groupId>
+  <artifactId>testng</artifactId>
+  <version>7.12.0</version>
 </dependency>
 ```
 
