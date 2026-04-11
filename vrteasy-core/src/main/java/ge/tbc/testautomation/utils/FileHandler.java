@@ -58,7 +58,6 @@ public class FileHandler {
       PDDocument document = Loader.loadPDF(filePath.toFile());
       PDFRenderer renderer = new PDFRenderer(document);
 
-      System.out.println(document.getNumberOfPages());
       return IntStream.range(0, document.getNumberOfPages())
           .mapToObj(pageIndex -> {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
