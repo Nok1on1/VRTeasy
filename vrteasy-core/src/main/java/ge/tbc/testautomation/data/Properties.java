@@ -16,7 +16,7 @@ public class Properties {
     }
 
     var properties = VRTeasyConfigProvider.loadProperties();
-    downloadFolder = properties.getProperty("download.folder", "/downloads");
+    downloadFolder = properties.getProperty("download.folder", "/target");
     downloadTimeout = Integer.parseInt(properties.getProperty("download.timeout", "3"));
     downloadTick = Integer.parseInt(properties.getProperty("download.tick", "300"));
     pdfImageDPI = Integer.parseInt(properties.getProperty("pdf.image.dpi", "300"));

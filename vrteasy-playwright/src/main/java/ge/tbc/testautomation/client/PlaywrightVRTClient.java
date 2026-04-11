@@ -26,7 +26,7 @@ public class PlaywrightVRTClient extends VRTClient {
       page.click(xpath);
     });
 
-    var path = Paths.get(Properties.downloadFolder + download.suggestedFilename());
+    var path = Paths.get(Properties.downloadFolder, download.suggestedFilename());
     download.saveAs(path);
 
     logger.getLogger().info("Downloaded file: " + download.suggestedFilename());
