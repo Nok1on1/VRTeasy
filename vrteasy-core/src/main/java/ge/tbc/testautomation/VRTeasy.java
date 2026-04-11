@@ -1,5 +1,9 @@
 package ge.tbc.testautomation;
 
+import static ge.tbc.testautomation.data.messages.createSdkMismatchException;
+import static ge.tbc.testautomation.data.messages.formatInterruptedMessage;
+import static ge.tbc.testautomation.data.messages.formatIoFailureMessage;
+
 import ge.tbc.testautomation.client.VRTClient;
 import io.visual_regression_tracker.sdk_java.TestRunStatus;
 import io.visual_regression_tracker.sdk_java.VisualRegressionTracker;
@@ -11,9 +15,6 @@ import org.testng.asserts.Assertion;
 import org.testng.asserts.SoftAssert;
 
 public class VRTeasy {
-
-  private static final String NL = System.lineSeparator();
-
   private final VisualRegressionTracker vrt;
   private final Assertion assertion;
   private final VRTClient vrtClient;
@@ -84,33 +85,6 @@ public class VRTeasy {
     if (assertion instanceof SoftAssert softAssert) {
       softAssert.assertAll();
     }
-  }
-
-  private static IllegalStateException createSdkMismatchException(String action, NoSuchMethodError error) {
-    return new IllegalStateException("[VRTeasy runtime compatibility error]" + NL
-        + "Problem: incompatible Visual Regression Tracker SDK detected while trying to '" + action + "'." + NL
-        + "What to do:" + NL
-        + "  1) Use the same sdk-java version that VRTeasy was built with." + NL
-        + "  2) Remove duplicate/older sdk-java versions from your dependency tree." + NL
-        + "  3) Run 'mvn dependency:tree -Dincludes=com.github.Visual-Regression-Tracker:sdk-java'" + NL
-        + "     and keep only one version.", error);
-  }
-
-  private static String formatInterruptedMessage(String action) {
-    return "[VRTeasy runtime error]" + NL
-        + "Problem: thread was interrupted during VRT '" + action + "' call." + NL
-        + "What to do:" + NL
-        + "  1) Treat this test as aborted." + NL
-        + "  2) Check timeout/cancellation logic in your test framework.";
-  }
-
-  private static String formatIoFailureMessage(String action) {
-    return "[VRTeasy runtime error]" + NL
-        + "Problem: I/O failure while calling VRT '" + action + "'." + NL
-        + "What to do:" + NL
-        + "  1) Verify API_URL/API_KEY in vrteasy.properties." + NL
-        + "  2) Ensure VRT server is running and reachable." + NL
-        + "  3) Retry once and inspect nested cause for HTTP details.";
   }
 }
 
