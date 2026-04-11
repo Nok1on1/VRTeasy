@@ -1,56 +1,34 @@
 package ge.tbc.testautomation;
 
-import static ge.tbc.testautomation.data.constants.*;
-import static ge.tbc.testautomation.data.messages.formatMissingPropertyMessage;
-import static ge.tbc.testautomation.data.messages.formatNotFoundMessage;
-import static ge.tbc.testautomation.data.messages.formatUnreadableMessage;
-
-import io.visual_regression_tracker.sdk_java.VisualRegressionTrackerConfig;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Map;
 
 public final class VRTeasyConfigProvider {
 
   private VRTeasyConfigProvider() {
   }
 
-  public static VisualRegressionTrackerConfig loadConfig(boolean softAssert) {
-    Properties properties = loadProperties();
-
-    return VisualRegressionTrackerConfig.builder()
-        .apiUrl(getRequiredProperty(properties, API_URL))
-        .apiKey(getRequiredProperty(properties, API_KEY))
-        .project(getRequiredProperty(properties, PROJECT_NAME))
-        .branchName(getRequiredProperty(properties, BRANCH_NAME))
-        .enableSoftAssert(softAssert)
-        .build();
-  }
-
-  private static Properties loadProperties() {
-    Properties properties = new Properties();
-
-    try (InputStream inputStream = Thread.currentThread()
-        .getContextClassLoader()
-        .getResourceAsStream(FILE_NAME)) {
-      if (inputStream == null) {
-        throw new IllegalStateException(formatNotFoundMessage());
+  public static Map<String, Object> readConfigFromJsonFile(File configFile){
+    if (!configFile.exists()) {
+      throw new IllegalArgumentException("File " + configFile + " doesn't exist");
+    } else {
+      String fileContent;
+      try {
+        fileContent = Files.readString(configFile.toPath(), StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        throw new IllegalArgumentException("Can't read content of provided config file", e);
       }
 
-      properties.load(inputStream);
-      return properties;
-    } catch (IOException e) {
-      throw new IllegalStateException(formatUnreadableMessage(), e);
+      Type mapType = (new TypeToken<Map<String, Object>>() {
+      }).getType();
+      return (Map)(new Gson()).fromJson(fileContent, mapType);
     }
-  }
-
-  private static String getRequiredProperty(Properties properties, String key) {
-    String value = properties.getProperty(key);
-    if (value == null || value.isBlank()) {
-      throw new IllegalStateException(formatMissingPropertyMessage(key));
-    }
-
-    return value.trim();
   }
 
 }
