@@ -81,7 +81,7 @@ public class VRTeasy {
     return vrt;
   }
 
-  public TestRunResponse takeScreenshot(String screenshotIdentifier, TestRunStatus testRunStatus) {
+  public TestRunResponse takeScreenshotAndTrack(String screenshotIdentifier, TestRunStatus testRunStatus) {
     byte[] screenshot = vrtClient.screenshot();
 
     try {
@@ -93,12 +93,12 @@ public class VRTeasy {
     }
   }
 
-  public Stream<TestRunResponse> downloadAndComparePdf(String xpath, TestRunStatus testRunStatus) {
+  public Stream<TestRunResponse> downloadAndTrackPdf(String xpath, TestRunStatus testRunStatus) {
     Path filePath = vrtClient.downloadPdf(xpath);
-    return comparePdf(filePath, testRunStatus);
+    return trackPdf(filePath, testRunStatus);
   }
 
-  public Stream<TestRunResponse> comparePdf(Path filePath, TestRunStatus testRunStatus) {
+  public Stream<TestRunResponse> trackPdf(Path filePath, TestRunStatus testRunStatus) {
     AtomicInteger pageNum = new AtomicInteger(1);
 
     return FileHandler.streamPdfPagesAsImages(filePath).map(pageImage -> {
