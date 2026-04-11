@@ -9,6 +9,6 @@ public abstract class VRTClient {
 
   public abstract byte[] screenshot();
 
-  public abstract Path downloadPdf(String xpath);
+  public abstract Path downloadPDF(String xpath);
 }
 

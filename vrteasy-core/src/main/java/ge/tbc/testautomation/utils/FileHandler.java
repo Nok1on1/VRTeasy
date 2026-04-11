@@ -53,11 +53,12 @@ public class FileHandler {
         "Download failed: Timeout reached after " + Properties.downloadTimeout + " seconds.");
   }
 
-  public static Stream<byte[]> streamPdfPagesAsImages(Path filePath) {
+  public static Stream<byte[]> streamPDFPagesAsImages(Path filePath) {
     try {
       PDDocument document = Loader.loadPDF(filePath.toFile());
       PDFRenderer renderer = new PDFRenderer(document);
 
+      System.out.println(document.getNumberOfPages());
       return IntStream.range(0, document.getNumberOfPages())
           .mapToObj(pageIndex -> {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

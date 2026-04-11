@@ -25,7 +25,7 @@ public class SeleniumVRTClient extends VRTClient {
   }
 
   @Override
-  public Path downloadPdf(String xpath) {
+  public Path downloadPDF(String xpath) {
     driver.findElement(By.xpath(xpath)).click();
 
     Path filePath = waitForFileDownload(LocalTime.now(ZoneId.systemDefault()));

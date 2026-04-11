@@ -21,10 +21,8 @@ public class PlaywrightVRTClient extends VRTClient {
   }
 
   @Override
-  public Path downloadPdf(String xpath) {
-    Download download = page.waitForDownload(() -> {
-      page.click(xpath);
-    });
+  public Path downloadPDF(String xpath) {
+    Download download = page.waitForDownload(() -> page.click(xpath));
 
     var path = Paths.get(Properties.downloadFolder, download.suggestedFilename());
     download.saveAs(path);
@@ -33,5 +31,6 @@ public class PlaywrightVRTClient extends VRTClient {
 
     return path;
   }
+
 }
 

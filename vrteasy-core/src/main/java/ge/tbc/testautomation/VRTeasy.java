@@ -18,8 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 import org.testng.asserts.Assertion;
 import org.testng.asserts.SoftAssert;
 
@@ -81,7 +81,8 @@ public class VRTeasy {
     return vrt;
   }
 
-  public TestRunResponse takeScreenshotAndTrack(String screenshotIdentifier, TestRunStatus testRunStatus) {
+  public TestRunResponse takeScreenshotAndTrack(String screenshotIdentifier,
+      TestRunStatus testRunStatus) {
     byte[] screenshot = vrtClient.screenshot();
 
     try {
@@ -93,21 +94,23 @@ public class VRTeasy {
     }
   }
 
-  public Stream<TestRunResponse> downloadAndTrackPdf(String xpath, TestRunStatus testRunStatus) {
-    Path filePath = vrtClient.downloadPdf(xpath);
-    return trackPdf(filePath, testRunStatus);
+  public List<TestRunResponse> downloadAndTrackPDF(String xpath, TestRunStatus testRunStatus) {
+    Path filePath = vrtClient.downloadPDF(xpath);
+    return trackPDF(filePath, testRunStatus);
   }
 
-  public Stream<TestRunResponse> trackPdf(Path filePath, TestRunStatus testRunStatus) {
+  public List<TestRunResponse> trackPDF(Path filePath, TestRunStatus testRunStatus) {
     AtomicInteger pageNum = new AtomicInteger(1);
 
-    return FileHandler.streamPdfPagesAsImages(filePath).map(pageImage -> {
-      int index = pageNum.getAndIncrement();
-      var imageIdentifier = filePath.getFileName().toString() + "_page_" + index;
-      String base64Image = Base64.getEncoder().encodeToString(pageImage);
+    return FileHandler.streamPDFPagesAsImages(filePath)
+        .map(pageImage -> {
+          int index = pageNum.getAndIncrement();
+          var imageIdentifier = filePath.getFileName().toString() + "_page_" + index;
+          String base64Image = Base64.getEncoder().encodeToString(pageImage);
 
-      return trackImage(imageIdentifier, base64Image, testRunStatus);
-    });
+          return trackImage(imageIdentifier, base64Image, testRunStatus);
+        })
+        .toList();
   }
 
   protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
@@ -146,4 +149,3 @@ public class VRTeasy {
     }
   }
 }
-
