@@ -2,6 +2,8 @@
 
 VRTeasy is a lightweight Java wrapper around [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) for visual checks in UI tests.
 
+see also: [vrt-sdk-java](https://github.com/Visual-Regression-Tracker/sdk-java)
+
 ## Modules
 
 - `ge.tbc.testautomation:vrteasy-core` - `VRTeasy`, config loading, and base `VRTClient`
@@ -30,7 +32,26 @@ new VRTeasy(vrtClient, visualRegressionTrackerConfig);
 ```
 
 - Use `new VRTeasy(vrtClient)` to load configuration from `vrt.json` in the current working directory.
+```
+  {
+    "apiUrl": "[http://162.243.161.172:4200](http://localhost:4200)",
+    "project": "003f5fcf-6c5f-4f1f-a99f-82a697711382",
+    "apiKey": "F5Z2H0H2SNMXZVHX0EA4YQM1MGDD",
+    "branchName": "develop",
+    "enableSoftAssert": false,
+    "ciBuildId": "40bdba4"
+    }
+```
 - Use `new VRTeasy(vrtClient, visualRegressionTrackerConfig)` when you want full runtime control from code.
+```java
+VisualRegressionTrackerConfig config = VisualRegressionTrackerConfig.builder()
+                .apiUrl("http://localhost:4200")
+                .apiKey("F5Z2H0H2SNMXZVHX0EA4YQM1MGDD")
+                .project("003f5fcf-6c5f-4f1f-a99f-82a697711382")
+                .enableSoftAssert(true)
+                .branchName("develop")
+                .build();
+```
 - If `enableSoftAssert` is `true`, assertion failures are aggregated and thrown on `stopVRT()`.
 
 Example `vrt.json`:
@@ -45,21 +66,27 @@ Example `vrt.json`:
 
 Main class: `vrteasy-core/src/main/java/ge/tbc/testautomation/VRTeasy.java`
 
+`VRTBase` can be used with any testing framework as long as you provide a `VRTClient` implementation;
+
 Base client class: `vrteasy-core/src/main/java/ge/tbc/testautomation/client/VRTClient.java`
 
 ```java
 public abstract class VRTClient {
   public abstract byte[] screenshot();
-  public abstract Path downloadPDF(String xpath);
+  public abstract Path downloadPDF(String xpath); // button that is pressed to download the PDF
 }
 ```
 
-Common `VRTeasy` operations:
+Common `VRTBase` operations:
+
+- `trackPDF(Path filePath, TestRunStatus expectedStatus)`
+- `trackImage(String imageIdentifier, String base64Image, TestRunStatus expectedStatus)`
+- `stopVRT()`
+
+Common `VRTeasy` (extends `VRTBase`) operations:
 
 - `takeScreenshotAndTrack(String screenshotIdentifier, TestRunStatus expectedStatus)`
 - `downloadAndTrackPDF(String xpath, TestRunStatus expectedStatus)`
-- `trackPDF(Path filePath, TestRunStatus expectedStatus)`
-- `stopVRT()`
 
 ## Adapter examples
 
@@ -99,7 +126,7 @@ driver.quit();
 
 ## Maven dependency examples
 
-Project release version: `0.3.1`
+Project release version: `0.3.2`
 
 VRTeasy modules declare key integrations as `provided`:
 
@@ -116,7 +143,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-core</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 
 <dependency>
@@ -138,7 +165,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-playwright</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 
 <dependency>
@@ -166,7 +193,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-selenium</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
 </dependency>
 
 <dependency>
