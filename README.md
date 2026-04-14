@@ -66,7 +66,7 @@ Example `vrt.json`:
 
 Main class: `vrteasy-core/src/main/java/ge/tbc/testautomation/VRTeasy.java`
 
-`VRTBase` can be used with any testing framework as long as you provide a `VRTClient` implementation;
+`VRTBase` works with any web automation framework as long as you provide a `VRTClient` implementation when using `VRTeasy`.
 
 Base client class: `vrteasy-core/src/main/java/ge/tbc/testautomation/client/VRTClient.java`
 
@@ -82,6 +82,27 @@ Common `VRTBase` operations:
 - `trackPDF(Path filePath, TestRunStatus expectedStatus)`
 - `trackImage(String imageIdentifier, String base64Image, TestRunStatus expectedStatus)`
 - `stopVRT()`
+
+
+###  Use `VRTBase` directly for
+#### 1) PDF Tracking
+
+```java
+VRTBase vrtBase = new VRTBase();
+vrtBase.trackPDF(Path.of("build/reports/monthly-statement.pdf"), TestRunStatus.OK);
+vrtBase.stopVRT();
+```
+
+### 2) Image Tracking
+
+```java
+VRTBase vrtBase = new VRTBase();
+byte[] screenshot = null;//... get screenshot bytes from anywhere
+var base64Image = Base64.getEncoder().encodeToString(screenshot);
+var idintifier = "screenshot-1";
+vrtBase.trackImage(idintifier,base64Image,TestRunStatus.OK); // expected status can be null. (no check will be performed on VRT side, but the image will be uploaded and visible in the dashboard)
+vrtBase.stopVRT();
+```
 
 Common `VRTeasy` (extends `VRTBase`) operations:
 
@@ -103,6 +124,7 @@ VRTeasy vrt = new VRTeasy(new PlaywrightVRTClient(page));
 
 page.navigate("https://example.com");
 vrt.takeScreenshotAndTrack("example-homepage", TestRunStatus.OK);
+vrt.downloadAndTrackPDF("//button[@id='download-statement']", TestRunStatus.OK); //xpath to the button that triggers PDF download
 vrt.stopVRT();
 
 page.close();
@@ -120,6 +142,7 @@ VRTeasy vrt = new VRTeasy(new SeleniumVRTClient(driver));
 
 driver.get("https://example.com");
 vrt.takeScreenshotAndTrack("example-homepage", TestRunStatus.OK);
+vrt.downloadAndTrackPDF("//button[@id='download-statement']", TestRunStatus.OK); //xpath to the button that triggers PDF download
 vrt.stopVRT();
 driver.quit();
 ```
@@ -214,4 +237,3 @@ Your project should include the dependencies it needs at compile/runtime.
   <version>7.12.0</version>
 </dependency>
 ```
-
