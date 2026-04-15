@@ -17,7 +17,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 
 public class FileHandler {
 
-  public static Path waitForFileDownload(LocalTime startTime) {
+  public static Path waitForFileDownload(LocalTime startTime, String extensionType) {
     File dir = new File(Properties.downloadFolder);
 
     while (LocalTime.now().isBefore(startTime.plusSeconds(Properties.downloadTimeout))) {
@@ -33,8 +33,7 @@ public class FileHandler {
 
           if (fileTime.isAfter(startTime)) {
             String name = file.getName();
-            if (!name.endsWith(".crdownload") && !name.endsWith(".part") && !name.endsWith(
-                ".tmp")) {
+            if (name.endsWith(extensionType) && !name.endsWith(".crdownload")) {
               return file.toPath();
             }
           }
