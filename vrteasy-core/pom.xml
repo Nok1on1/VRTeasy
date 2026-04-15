@@ -7,7 +7,7 @@
   <parent>
     <groupId>ge.tbc.testautomation</groupId>
     <artifactId>vrteasy</artifactId>
-    <version>0.3.2</version>
+    <version>0.3.3</version>
   </parent>
 
   <artifactId>vrteasy-core</artifactId>

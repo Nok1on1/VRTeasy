@@ -177,7 +177,7 @@ driver.quit();
 
 ## Maven dependency examples
 
-Project release version: `0.3.2`
+Project release version: `0.3.3`
 
 VRTeasy modules declare key integrations as `provided`:
 
@@ -194,7 +194,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-core</artifactId>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
 </dependency>
 
 <dependency>
@@ -216,7 +216,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-playwright</artifactId>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
 </dependency>
 
 <dependency>
@@ -244,7 +244,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-selenium</artifactId>
-  <version>0.3.2</version>
+  <version>0.3.3</version>
 </dependency>
 
 <dependency>
