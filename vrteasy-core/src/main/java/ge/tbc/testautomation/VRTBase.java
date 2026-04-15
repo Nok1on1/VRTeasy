@@ -84,7 +84,8 @@ public class VRTBase {
         return FileHandler.streamPDFPagesAsImages(filePath)
                 .map(pageImage -> {
                     int index = pageNum.getAndIncrement();
-                    var imageIdentifier = filePath.getFileName().toString().split("//.")[0] + "_page_" + index;
+                    String fileName = filePath.getFileName().toString();
+                    var imageIdentifier = fileName.substring(0, fileName.indexOf(".")) + "_page_" + index;
                     String base64Image = Base64.getEncoder().encodeToString(pageImage);
 
                     return trackImage(imageIdentifier, base64Image, expectedStatus);
