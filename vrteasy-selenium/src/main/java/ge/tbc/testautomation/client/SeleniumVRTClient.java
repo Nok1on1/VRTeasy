@@ -35,6 +35,7 @@ public class SeleniumVRTClient extends VRTClient {
 
         if (fileName != null) {
             if (filePath.toFile().renameTo(Paths.get(filePath.getParent().toString(), fileName).toFile())) {
+              filePath = Paths.get(filePath.getParent().toString(), fileName);
                 logger.getLogger().info("Renamed file to: " + fileName);
             }
         }
