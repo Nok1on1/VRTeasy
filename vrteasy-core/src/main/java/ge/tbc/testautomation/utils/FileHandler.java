@@ -33,7 +33,7 @@ public class FileHandler {
 
           if (fileTime.isAfter(startTime)) {
             String name = file.getName();
-            if (name.endsWith(extensionType) && !name.endsWith(".crdownload")) {
+            if (name.endsWith("." + extensionType) && !name.endsWith(".crdownload")) {
               return file.toPath();
             }
           }

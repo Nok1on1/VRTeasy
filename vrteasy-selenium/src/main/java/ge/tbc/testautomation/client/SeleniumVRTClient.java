@@ -29,7 +29,7 @@ public class SeleniumVRTClient extends VRTClient {
     public Path downloadPDF(String fileName, String xpath) {
         driver.findElement(By.xpath(xpath)).click();
 
-        Path filePath = waitForFileDownload(LocalTime.now(ZoneId.systemDefault()));
+        Path filePath = waitForFileDownload(LocalTime.now(ZoneId.systemDefault()), "pdf");
 
         logger.getLogger().info("Downloaded file: " + filePath.getFileName());
 
