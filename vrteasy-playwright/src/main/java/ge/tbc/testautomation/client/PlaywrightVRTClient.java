@@ -4,33 +4,36 @@ import com.microsoft.playwright.Download;
 import com.microsoft.playwright.Page;
 import ge.tbc.testautomation.data.Properties;
 import ge.tbc.testautomation.utils.VRTLogger;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PlaywrightVRTClient extends VRTClient {
 
-  private final Page page;
+    private final Page page;
 
-  public PlaywrightVRTClient(Page page) {
-    this.page = page;
-  }
+    public PlaywrightVRTClient(Page page) {
+        this.page = page;
+    }
 
-  @Override
-  public byte[] screenshot() {
-    return page.screenshot();
-  }
+    @Override
+    public byte[] screenshot() {
+        return page.screenshot();
+    }
 
-  @Override
-  public Path downloadPDF(String xpath) {
-    Download download = page.waitForDownload(() -> page.click(xpath));
+    @Override
+    public Path downloadPDF(String fileName, String xpath) {
+        Download download = page.waitForDownload(() -> page.click(xpath));
 
-    var path = Paths.get(Properties.downloadFolder, download.suggestedFilename());
-    download.saveAs(path);
+        String filename = fileName != null ? fileName : download.suggestedFilename();
 
-    logger.getLogger().info("Downloaded file: " + download.suggestedFilename());
+        var path = Paths.get(Properties.downloadFolder, filename);
+        download.saveAs(path);
 
-    return path;
-  }
+        logger.getLogger().info("Downloaded file: " + fileName);
+
+        return path;
+    }
 
 }
 
