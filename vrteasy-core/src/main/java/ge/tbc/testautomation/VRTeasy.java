@@ -3,9 +3,9 @@ package ge.tbc.testautomation;
 import static ge.tbc.testautomation.data.Messages.createSdkMismatchException;
 
 import ge.tbc.testautomation.client.VRTClient;
+import io.visual_regression_tracker.sdk_java.TestRunResult;
 import io.visual_regression_tracker.sdk_java.TestRunStatus;
 import io.visual_regression_tracker.sdk_java.VisualRegressionTrackerConfig;
-import io.visual_regression_tracker.sdk_java.response.TestRunResponse;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
@@ -25,7 +25,7 @@ public class VRTeasy extends VRTBase {
     this.vrtClient = vrtClient;
   }
 
-  public TestRunResponse takeScreenshotAndTrack(String screenshotIdentifier,
+  public TestRunResult takeScreenshotAndTrack(String screenshotIdentifier,
       TestRunStatus expectedStatus) {
     byte[] screenshot = vrtClient.screenshot();
 
@@ -38,7 +38,7 @@ public class VRTeasy extends VRTBase {
     }
   }
 
-  public List<TestRunResponse> downloadAndTrackPDF(String xpath, TestRunStatus expectedStatus) {
+  public List<TestRunResult> downloadAndTrackPDF(String xpath, TestRunStatus expectedStatus) {
     Path filePath = vrtClient.downloadPDF(xpath);
     return trackPDF(filePath, expectedStatus);
   }

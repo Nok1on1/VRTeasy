@@ -9,6 +9,7 @@ import static ge.tbc.testautomation.utils.ColorFormatter.statusColorized;
 import ge.tbc.testautomation.data.Properties;
 import ge.tbc.testautomation.utils.FileHandler;
 import ge.tbc.testautomation.utils.VRTLogger;
+import io.visual_regression_tracker.sdk_java.TestRunResult;
 import io.visual_regression_tracker.sdk_java.TestRunStatus;
 import io.visual_regression_tracker.sdk_java.VisualRegressionTracker;
 import io.visual_regression_tracker.sdk_java.VisualRegressionTrackerConfig;
@@ -76,7 +77,7 @@ public class VRTBase {
     return vrt;
   }
 
-  public List<TestRunResponse> trackPDF(Path filePath, TestRunStatus expectedStatus) {
+  public List<TestRunResult> trackPDF(Path filePath, TestRunStatus expectedStatus) {
     AtomicInteger pageNum = new AtomicInteger(1);
 
     return FileHandler.streamPDFPagesAsImages(filePath)
@@ -90,22 +91,26 @@ public class VRTBase {
         .toList();
   }
 
-  protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
+  protected TestRunResult trackImage(String imageIdentifier, String base64Image,
       TestRunStatus expectedStatus) {
-    TestRunResponse response;
+    TestRunResult response;
     try {
-      response = vrt.track(imageIdentifier, base64Image).getTestRunResponse();
+      response = vrt.track(imageIdentifier, base64Image);
     } catch (IOException | InterruptedException e) {
       throw new RuntimeException(e);
     }
 
-    if (expectedStatus != null) {
-      assertion.assertEquals(response.getStatus(), expectedStatus,
+    if (expectedStatus != null && expectedStatus != TestRunStatus.NEW) {
+      var status = response.getTestRunResponse().getStatus();
+      assertion.assertEquals(status, expectedStatus,
           "VRT test run status mismatch for Image: " + imageIdentifier);
+
+      logger.getLogger().info(
+          "image: " + imageIdentifier + " returned status: " + statusColorized(status));
+    } else {
+      logger.getLogger().info("Tracked new image: " + imageIdentifier);
     }
 
-    logger.getLogger().info(
-        "image: " + imageIdentifier + " returned status: " + statusColorized(response.getStatus()));
     return response;
   }
 
