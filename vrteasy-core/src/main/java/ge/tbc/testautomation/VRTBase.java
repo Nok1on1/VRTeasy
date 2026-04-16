@@ -93,7 +93,7 @@ public class VRTBase {
                 .toList();
     }
 
-    protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
+    public TestRunResponse trackImage(String imageIdentifier, String base64Image,
                                          TestRunStatus expectedStatus) {
         TestRunResponse response;
         try {
