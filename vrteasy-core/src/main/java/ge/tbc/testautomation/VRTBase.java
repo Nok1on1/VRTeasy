@@ -16,6 +16,7 @@ import io.visual_regression_tracker.sdk_java.response.TestRunResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
@@ -26,106 +27,131 @@ import org.testng.asserts.SoftAssert;
 
 public class VRTBase {
 
-    private final VisualRegressionTracker vrt;
-    private final Assertion assertion;
-    private final Properties properties = new Properties();
+  private final VisualRegressionTracker vrt;
+  private final Assertion assertion;
+  private final Properties properties = new Properties();
 
-    protected final VRTLogger logger = new VRTLogger();
+  protected final VRTLogger logger = new VRTLogger();
 
-    public VRTBase(VisualRegressionTrackerConfig vrtConfig) {
-        Boolean softAssert = vrtConfig.getEnableSoftAssert();
+  public VRTBase(VisualRegressionTrackerConfig vrtConfig) {
+    Boolean softAssert = vrtConfig.getEnableSoftAssert();
 
-        if (softAssert) {
-            assertion = new SoftAssert();
-        } else {
-            assertion = new Assertion();
-        }
-
-        vrt = new VisualRegressionTracker(vrtConfig);
-
-        try {
-            vrt.start();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    if (softAssert) {
+      assertion = new SoftAssert();
+    } else {
+      assertion = new Assertion();
     }
 
-    public VRTBase() {
-        File file = new File("vrt.json");
+    vrt = new VisualRegressionTracker(vrtConfig);
 
-        boolean softAssert = (boolean) readConfigFromJsonFile(file).get("enableSoftAssert");
+    try {
+      vrt.start();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-        if (softAssert) {
-            assertion = new SoftAssert();
-        } else {
-            assertion = new Assertion();
-        }
+  public VRTBase() {
+    File file = new File("vrt.json");
 
-        vrt = new VisualRegressionTracker();
+    boolean softAssert = (boolean) readConfigFromJsonFile(file).get("enableSoftAssert");
 
-        try {
-            vrt.start();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    if (softAssert) {
+      assertion = new SoftAssert();
+    } else {
+      assertion = new Assertion();
     }
 
-    public Assertion getAssertion() {
-        return assertion;
+    vrt = new VisualRegressionTracker();
+
+    try {
+      vrt.start();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Assertion getAssertion() {
+    return assertion;
+  }
+
+  public VisualRegressionTracker getVRT() {
+    return vrt;
+  }
+
+  public List<TestRunResponse> trackPDF(Path filePath, TestRunStatus expectedStatus) {
+    AtomicInteger pageNum = new AtomicInteger(1);
+
+    return FileHandler.streamPDFPagesAsImages(filePath)
+        .map(pageImage -> {
+          int index = pageNum.getAndIncrement();
+          String fileName = filePath.getFileName().toString();
+          var imageIdentifier = fileName.substring(0, fileName.indexOf(".")) + "_page_" + index;
+          String base64Image = Base64.getEncoder().encodeToString(pageImage);
+
+          return trackImage(imageIdentifier, base64Image, expectedStatus);
+        })
+        .toList();
+  }
+
+  public TestRunResponse trackImage(String imageIdentifier, String base64Image,
+      TestRunStatus expectedStatus) {
+    TestRunResponse response;
+    try {
+      response = vrt.track(imageIdentifier, base64Image).getTestRunResponse();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
     }
 
-    public VisualRegressionTracker getVRT() {
-        return vrt;
+    if (expectedStatus != null) {
+      assertion.assertEquals(response.getStatus(), expectedStatus,
+          "VRT test run status mismatch for Image: " + imageIdentifier);
     }
 
-    public List<TestRunResponse> trackPDF(Path filePath, TestRunStatus expectedStatus) {
-        AtomicInteger pageNum = new AtomicInteger(1);
+    logger.getLogger().info(
+        "image: " + imageIdentifier + " returned status: " + statusColorized(response.getStatus()));
+    return response;
+  }
 
-        return FileHandler.streamPDFPagesAsImages(filePath)
-                .map(pageImage -> {
-                    int index = pageNum.getAndIncrement();
-                    String fileName = filePath.getFileName().toString();
-                    var imageIdentifier = fileName.substring(0, fileName.indexOf(".")) + "_page_" + index;
-                    String base64Image = Base64.getEncoder().encodeToString(pageImage);
+  public TestRunResponse trackImage(String imageIdentifier, byte[] Image,
+      TestRunStatus expectedStatus) {
+    var base64Image = Base64.getEncoder().encodeToString(Image);
 
-                    return trackImage(imageIdentifier, base64Image, expectedStatus);
-                })
-                .toList();
+    return trackImage(imageIdentifier, base64Image, expectedStatus);
+  }
+
+  public TestRunResponse trackImage(String imageIdentifier, Path imagePath,
+      TestRunStatus expectedStatus) {
+
+    if (!Files.exists(imagePath) || !Files.isRegularFile(imagePath) || !Files.isReadable(
+        imagePath)) {
+      throw new IllegalArgumentException("Image path is invalid or unreadable: " + imagePath);
     }
 
-    protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
-                                         TestRunStatus expectedStatus) {
-        TestRunResponse response;
-        try {
-            response = vrt.track(imageIdentifier, base64Image).getTestRunResponse();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (expectedStatus != null) {
-            assertion.assertEquals(response.getStatus(), expectedStatus,
-                    "VRT test run status mismatch for Image: " + imageIdentifier);
-        }
-
-        logger.getLogger().info(
-                "image: " + imageIdentifier + " returned status: " + statusColorized(response.getStatus()));
-        return response;
+    byte[] imageBytes;
+    try {
+      imageBytes = Files.readAllBytes(imagePath);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read image from path: " + imagePath, e);
     }
 
-    public void stopVRT() {
-        try {
-            vrt.stop();
-        } catch (NoSuchMethodError e) {
-            throw createSdkMismatchException("stop", e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(formatInterruptedMessage("stop"), e);
-        } catch (IOException e) {
-            throw new IllegalStateException(formatIoFailureMessage("stop"), e);
-        }
+    return trackImage(imageIdentifier, imageBytes, expectedStatus);
+  }
 
-        if (assertion instanceof SoftAssert softAssert) {
-            softAssert.assertAll();
-        }
+  public void stopVRT() {
+    try {
+      vrt.stop();
+    } catch (NoSuchMethodError e) {
+      throw createSdkMismatchException("stop", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(formatInterruptedMessage("stop"), e);
+    } catch (IOException e) {
+      throw new IllegalStateException(formatIoFailureMessage("stop"), e);
     }
+
+    if (assertion instanceof SoftAssert softAssert) {
+      softAssert.assertAll();
+    }
+  }
 }
