@@ -194,7 +194,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-core</artifactId>
-    <version>0.3.5</version>
+    <version>0.3.6</version>
 </dependency>
 
 <dependency>
@@ -216,7 +216,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-playwright</artifactId>
-    <version>0.3.5</version>
+    <version>0.3.6</version>
 </dependency>
 
 <dependency>
@@ -244,7 +244,7 @@ Your project should include the dependencies it needs at compile/runtime.
 <dependency>
   <groupId>ge.tbc.testautomation</groupId>
   <artifactId>vrteasy-selenium</artifactId>
-    <version>0.3.5</version>
+    <version>0.3.6</version>
 </dependency>
 
 <dependency>
