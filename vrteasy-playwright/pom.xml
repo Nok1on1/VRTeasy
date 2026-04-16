@@ -7,7 +7,7 @@
   <parent>
     <groupId>ge.tbc.testautomation</groupId>
     <artifactId>vrteasy</artifactId>
-    <version>${revision}</version>
+    <version>0.3.5</version>
   </parent>
 
   <artifactId>vrteasy-playwright</artifactId>
