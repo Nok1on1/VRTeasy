@@ -21,14 +21,14 @@ public class VRTeasyConfigProvider {
   private VRTeasyConfigProvider() {
   }
 
-  public static Properties loadProperties() {
+  public static Properties loadProperties(){
     Properties properties = new Properties();
 
     try (InputStream inputStream = Thread.currentThread()
         .getContextClassLoader()
         .getResourceAsStream(FILE_NAME)) {
       if (inputStream == null) {
-        throw new IllegalStateException(formatNotFoundMessage());
+        return properties;
       }
 
       properties.load(inputStream);
