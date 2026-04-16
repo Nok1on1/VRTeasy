@@ -16,6 +16,7 @@ import io.visual_regression_tracker.sdk_java.response.TestRunResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
@@ -93,7 +94,7 @@ public class VRTBase {
         .toList();
   }
 
-  protected TestRunResponse trackImage(String imageIdentifier, String base64Image,
+  public TestRunResponse trackImage(String imageIdentifier, String base64Image,
       TestRunStatus expectedStatus) {
     TestRunResponse response;
     try {
@@ -117,6 +118,24 @@ public class VRTBase {
     var base64Image = Base64.getEncoder().encodeToString(Image);
 
     return trackImage(imageIdentifier, base64Image, expectedStatus);
+  }
+
+  public TestRunResponse trackImage(String imageIdentifier, Path imagePath,
+      TestRunStatus expectedStatus) {
+
+    if (!Files.exists(imagePath) || !Files.isRegularFile(imagePath) || !Files.isReadable(
+        imagePath)) {
+      throw new IllegalArgumentException("Image path is invalid or unreadable: " + imagePath);
+    }
+
+    byte[] imageBytes;
+    try {
+      imageBytes = Files.readAllBytes(imagePath);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read image from path: " + imagePath, e);
+    }
+
+    return trackImage(imageIdentifier, imageBytes, expectedStatus);
   }
 
   public void stopVRT() {
